@@ -1,4 +1,3 @@
-# SOM-Research/code-of-conduct-analyzer/action.yml
 name: 'Code of Conduct Analyzer'
 description: 'Validates the Code of Conduct file in the repository, performs analysis, and triggers workflows based on the result'
 author: 'CobosDS'
