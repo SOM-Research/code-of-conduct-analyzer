@@ -1,3 +1,4 @@
+# .github/actions/code-of-conduct-analyzer/action.yml
 name: 'Code of Conduct Analyzer'
 description: 'Validates the Code of Conduct file in the repository, performs analysis, and triggers workflows based on the result'
 author: 'CobosDS'
@@ -91,6 +92,14 @@ runs:
         response=$(curl -s -X POST "${{ inputs.server_url }}" -H "Content-Type: application/json" --data @data/payload.json)
         echo "$response" > data/response.json
         cat data/response.json
+
+    - name: Check if response file exists
+      shell: bash
+      run: |
+        if [ ! -f data/response.json ]; then
+          echo "Error: data/response.json does not exist."
+          exit 1
+        fi
 
     - name: Check Contributor Covenant Version
       id: check_version
