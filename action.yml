@@ -28,6 +28,7 @@ runs:
         else
           echo "No CODE_OF_CONDUCT.md file found"
           echo "no_code_of_conduct=true" >> $GITHUB_ENV
+        fi
 
     - name: Handle No Code of Conduct Scenario
       if: env.no_code_of_conduct == 'true'
