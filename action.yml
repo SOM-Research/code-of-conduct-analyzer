@@ -31,9 +31,8 @@ runs:
       if: env.no_code_of_conduct == 'true'
       uses: SOM-Research/code-of-conduct-initializer@v1
       with:
-        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        EVENT_TYPE: 'no_code_of_conduct'
+        USER_GITHUB_TOKEN: ${{ inputs.USER_GITHUB_TOKEN }}
+        EVENT_ACTION: 'no_code_of_conduct'
 
     - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
       id: check_lines
