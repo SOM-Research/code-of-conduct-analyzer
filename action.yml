@@ -27,18 +27,17 @@ runs:
 
     - name: Check if CODE_OF_CONDUCT.md exists
       id: check_coc
-      shell: bash
       run: |
         if [ -f CODE_OF_CONDUCT.md ]; then
           echo "coc_file=CODE_OF_CONDUCT.md" >> $GITHUB_ENV
         else
           echo "No CODE_OF_CONDUCT.md file found"
-          echo "Triggering handle_no_code_of_conduct workflow"
+          echo "no_code_of_conduct=true" >> $GITHUB_ENV
           exit 1
-         fi
+        fi
 
     - name: Trigger Handle No Code of Conduct Workflow
-      if: steps.check_coc.outputs.coc_file == ''
+      if: env.no_code_of_conduct == 'true'
       uses: SOM-Research/code-of-conduct-initializer@v1
       with:
         github_token: ${{ inputs.github_token }}
@@ -46,16 +45,16 @@ runs:
 
     - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
       id: check_lines
-      shell: bash
       run: |
         line_count=$(wc -l < ${{ env.coc_file }})
         echo "line_count=$line_count" >> $GITHUB_ENV
         if [ $line_count -le 5 ]; then
           echo "CODE_OF_CONDUCT.md has 5 lines or less"
+          echo "code_of_conduct_incomplete=true" >> $GITHUB_ENV
           exit 1
 
     - name: Trigger Handle Incomplete Code of Conduct Workflow
-      if: steps.check_lines.outputs.line_count <= 5
+      if: env.code_of_conduct_incomplete == 'true'
       uses: SOM-Research/code-of-conduct-initializer@v1
       with:
         github_token: ${{ inputs.github_token }}
@@ -63,7 +62,6 @@ runs:
 
     - name: Read Code of Conduct
       id: read_coc
-      shell: bash
       run: |
         mkdir -p data
         content=$(cat ${{ env.coc_file }})
@@ -71,14 +69,12 @@ runs:
 
     - name: Get repository details
       id: repo_details
-      shell: bash
       run: |
         echo "repo_name=${{ github.repository }}" >> $GITHUB_ENV
         echo "repo_url=https://github.com/${{ github.repository }}" >> $GITHUB_ENV
 
     - name: Convert Code of Conduct to JSON
       id: convert_to_json
-      shell: bash
       run: |
         content=$(cat data/code_of_conduct.txt)
         repo_name="${{ env.repo_name }}"
@@ -88,7 +84,6 @@ runs:
 
     - name: Send Code of Conduct to server
       id: send_coc
-      shell: bash
       run: |
         response=$(curl -s -X POST "${{ inputs.server_url }}" -H "Content-Type: application/json" --data @data/payload.json)
         if [ -z "$response" ]; then
@@ -99,7 +94,6 @@ runs:
         cat data/response.json
 
     - name: Check if response file exists
-      shell: bash
       run: |
         if [ ! -f data/response.json ]; then
           echo "Error: data/response.json does not exist."
@@ -108,7 +102,6 @@ runs:
 
     - name: Check response status
       id: check_response
-      shell: bash
       run: |
         status=$(jq -r '.data.status' data/response.json)
         echo "status=$status" >> $GITHUB_ENV
@@ -118,7 +111,6 @@ runs:
 
     - name: Calculate missing flags
       id: calculate_missing_flags
-      shell: bash
       run: |
         required_flags=("F1" "F2" "F3" "F4" "F5" "F6" "F7" "F8" "F9" "F10")
         flags=$(echo '${{ env.flags }}' | jq -r 'keys[]')
@@ -133,7 +125,6 @@ runs:
 
     - name: Trigger Issue Creation Workflow
       if: env.missing_flags != '' && env.status == 'analyzed'
-      shell: bash
       run: |
         curl -X POST \
           -H "Accept: application/vnd.github.v3+json" \
@@ -143,7 +134,6 @@ runs:
 
     - name: Check Contributor Covenant Version
       id: check_version
-      shell: bash
       run: |
         version=$(jq -r '.data.contributor_covenant_version' data/response.json)
         echo "version=$version" >> $GITHUB_ENV
