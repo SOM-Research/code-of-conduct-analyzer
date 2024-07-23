@@ -101,7 +101,7 @@ runs:
 
     - name: Trigger Handle Repos without Code of Conduct Workflow
       if: env.version == '1.4'
-      uses: SOM-Research/code-of-conduct-inicializer@v1
+      uses: SOM-Research/code-of-conduct-initializer@v1
       with:
         github_token: ${{ inputs.github_token }}
 
