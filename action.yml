@@ -1,3 +1,4 @@
+# SOM-Research/code-of-conduct-analyzer/action.yml
 name: 'Code of Conduct Analyzer'
 description: 'Validates the Code of Conduct file in the repository, performs analysis, and triggers workflows based on the result'
 author: 'CobosDS'
@@ -104,6 +105,7 @@ runs:
       uses: SOM-Research/code-of-conduct-initializer@v1
       with:
         github_token: ${{ inputs.github_token }}
+        event_action: 'handle_contributor_covenant_1_4'
 
     - name: Check response status
       id: check_response
