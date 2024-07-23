@@ -1,0 +1,143 @@
+name: 'Code of Conduct Analyzer'
+description: 'Validates the Code of Conduct file in the repository, performs analysis, and triggers workflows based on the result'
+author: 'CobosDS'
+inputs:
+  github_token:
+    description: 'GitHub token'
+    required: true
+  server_url:
+    description: 'URL of the analysis server'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+
+    - name: Install jq
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+
+    - name: Check if CODE_OF_CONDUCT.md exists
+      id: check_coc
+      shell: bash
+      run: |
+        if [ -f CODE_OF_CONDUCT.md ]; then
+          echo "coc_file=CODE_OF_CONDUCT.md" >> $GITHUB_ENV
+        else
+          echo "No CODE_OF_CONDUCT.md file found"
+          # Trigger another workflow if CODE_OF_CONDUCT.md is missing
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ inputs.github_token }}" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type":"no_code_of_conduct","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+          exit 1
+
+    - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
+      id: check_lines
+      shell: bash
+      run: |
+        line_count=$(wc -l < ${{ env.coc_file }})
+        echo "line_count=$line_count" >> $GITHUB_ENV
+        if [ $line_count -le 5 ]; then
+          echo "CODE_OF_CONDUCT.md has 5 lines or less"
+          # Trigger another workflow if CODE_OF_CONDUCT.md has 5 lines or less
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ inputs.github_token }}" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type":"code_of_conduct_incomplete","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+          exit 1
+
+    - name: Read Code of Conduct
+      id: read_coc
+      shell: bash
+      run: |
+        mkdir -p data
+        content=$(cat ${{ env.coc_file }})
+        echo "$content" > data/code_of_conduct.txt
+
+    - name: Get repository details
+      id: repo_details
+      shell: bash
+      run: |
+        echo "repo_name=${{ github.repository }}" >> $GITHUB_ENV
+        echo "repo_url=https://github.com/${{ github.repository }}" >> $GITHUB_ENV
+
+    - name: Convert Code of Conduct to JSON
+      id: convert_to_json
+      shell: bash
+      run: |
+        content=$(cat data/code_of_conduct.txt)
+        repo_name="${{ env.repo_name }}"
+        repo_url="${{ env.repo_url }}"
+        jq -n --arg type "code_of_conduct" --arg code_of_conduct "$content" --arg repository_name "$repo_name" --arg repository_url "$repo_url" '{type: $type, code_of_conduct: $code_of_conduct, repository_name: $repository_name, repository_url: $repository_url}' > data/payload.json
+        cat data/payload.json
+
+    - name: Send Code of Conduct to server
+      id: send_coc
+      shell: bash
+      run: |
+        response=$(curl -s -X POST "${{ inputs.server_url }}" -H "Content-Type: application/json" --data @data/payload.json)
+        echo "$response" > data/response.json
+        cat data/response.json
+
+    - name: Check Contributor Covenant Version
+      id: check_version
+      shell: bash
+      run: |
+        version=$(jq -r '.data.contributor_covenant_version' data/response.json)
+        echo "version=$version" >> $GITHUB_ENV
+
+    - name: Trigger Handle Repos without Code of Conduct Workflow
+      if: env.version == '1.4'
+      shell: bash
+      run: |
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ inputs.github_token }}" \
+          https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -d '{"event_type":"handle_contributor_covenant_1_4","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+        exit 0
+
+    - name: Check response status
+      id: check_response
+      shell: bash
+      run: |
+        status=$(jq -r '.data.status' data/response.json)
+        echo "status=$status" >> $GITHUB_ENV
+        flags=$(jq -c '.data.flags' data/response.json)
+        echo "Flags: $flags"
+        echo "flags=$flags" >> $GITHUB_ENV
+
+    - name: Calculate missing flags
+      id: calculate_missing_flags
+      shell: bash
+      run: |
+        required_flags=("F1" "F2" "F3" "F4" "F5" "F6" "F7" "F8" "F9" "F10")
+        flags=$(echo '${{ env.flags }}' | jq -r 'keys[]')
+        missing_flags=()
+        for required_flag in "${required_flags[@]}"; do
+          if ! echo "$flags" | grep -q "$required_flag"; then
+            missing_flags+=("$required_flag")
+          fi
+        done
+        missing_flags_str=$(IFS=','; echo "${missing_flags[*]}")
+        echo "missing_flags=$missing_flags_str" >> $GITHUB_ENV
+
+    - name: Trigger Issue Creation Workflow
+      if: env.missing_flags != '' && env.status == 'analyzed'
+      shell: bash
+      run: |
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ inputs.github_token }}" \
+          https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -d '{"event_type":"create_issue_for_missing_guidelines","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}","missing_flags":"${{ env.missing_flags }}"}}'
