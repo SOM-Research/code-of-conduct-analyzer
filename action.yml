@@ -109,14 +109,14 @@ runs:
 
     - name: Trigger Handle Repos without Code of Conduct Action
       if: steps.check_coc.outputs.missing_coc == 'true'
-      uses: SOM-Research/code-of-conduct-analyzer@v1
+      uses: ./.github/actions/handle-code-of-conduct
       with:
         USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         EVENT_ACTION: 'no_code_of_conduct'
 
     - name: Trigger Handle Contributor Covenant Version 1.4 Action
       if: env.version == '1.4'
-      uses: SOM-Research/code-of-conduct-analyzer@v1
+      uses: ./.github/actions/handle-code-of-conduct
       with:
         USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         EVENT_ACTION: 'handle_contributor_covenant_1_4'
