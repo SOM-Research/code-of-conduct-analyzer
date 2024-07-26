@@ -4,9 +4,6 @@ inputs:
   GITHUB_TOKEN:
     description: 'GitHub Token'
     required: true
-  USER_GITHUB_TOKEN:
-    description: 'User GitHub Token'
-    required: true
   SERVER:
     description: 'Server URL to send the code of conduct'
     required: true
@@ -27,15 +24,13 @@ runs:
           echo "coc_file=CODE_OF_CONDUCT.md" >> $GITHUB_ENV
         else
           echo "No CODE_OF_CONDUCT.md file found"
-          echo "no_code_of_conduct=true" >> $GITHUB_ENV
-        fi
-
-    - name: Handle No Code of Conduct Scenario
-      if: env.no_code_of_conduct == 'true'
-      uses: SOM-Research/code-of-conduct-initializer@v1
-      with:
-        USER_GITHUB_TOKEN: ${{ inputs.USER_GITHUB_TOKEN }}
-        EVENT_ACTION: 'no_code_of_conduct'
+          # Trigger another workflow if CODE_OF_CONDUCT.md is missing
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ github.token }}" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type":"no_code_of_conduct","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+          exit 1
 
     - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
       id: check_lines
@@ -45,17 +40,15 @@ runs:
         echo "line_count=$line_count" >> $GITHUB_ENV
         if [ $line_count -le 5 ]; then
           echo "CODE_OF_CONDUCT.md has 5 lines or less"
-          echo "code_of_conduct_incomplete=true" >> $GITHUB_ENV
-
-    - name: Handle Incomplete Code of Conduct Scenario
-      if: env.code_of_conduct_incomplete == 'true'
-      uses: SOM-Research/code-of-conduct-initializer@v1
-      with:
-        USER_GITHUB_TOKEN: ${{ inputs.USER_GITHUB_TOKEN }}
-        EVENT_ACTION: 'code_of_conduct_incomplete'
+          # Trigger another workflow if CODE_OF_CONDUCT.md has 5 lines or less
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ github.token }}" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type":"code_of_conduct_incomplete","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+          exit 1
 
     - name: Read Code of Conduct
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: read_coc
       shell: bash
       run: |
@@ -64,7 +57,6 @@ runs:
         echo "$content" > data/code_of_conduct.txt
 
     - name: Get repository details
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: repo_details
       shell: bash
       run: |
@@ -72,7 +64,6 @@ runs:
         echo "repo_url=https://github.com/${{ github.repository }}" >> $GITHUB_ENV
 
     - name: Convert Code of Conduct to JSON
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: convert_to_json
       shell: bash
       run: |
@@ -83,7 +74,6 @@ runs:
         cat data/payload.json
 
     - name: Send Code of Conduct to server
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: send_coc
       shell: bash
       run: |
@@ -92,7 +82,6 @@ runs:
         cat data/response.json
 
     - name: Check response status
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: check_response
       shell: bash
       run: |
@@ -103,7 +92,6 @@ runs:
         echo "flags=$flags" >> $GITHUB_ENV
 
     - name: Calculate missing flags
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: calculate_missing_flags
       shell: bash
       run: |
@@ -119,7 +107,6 @@ runs:
         echo "missing_flags=$missing_flags_str" >> $GITHUB_ENV
 
     - name: Check Contributor Covenant Version
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true'
       id: check_version
       shell: bash
       run: |
@@ -127,14 +114,18 @@ runs:
         echo "version=$version" >> $GITHUB_ENV
 
     - name: Trigger Handle Repos without Code of Conduct Workflow
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true' && env.version == '1.4'
-      uses: SOM-Research/code-of-conduct-initializer@v1
-      with:
-        USER_GITHUB_TOKEN: ${{ inputs.USER_GITHUB_TOKEN }}
-        EVENT_ACTION: 'handle_contributor_covenant_1_4'
+      if: env.version == '1.4'
+      shell: bash
+      run: |
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ github.token }}" \
+          https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -d '{"event_type":"handle_contributor_covenant_1_4","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+        exit 0
 
     - name: Trigger Issue Creation Workflow
-      if: env.no_code_of_conduct != 'true' && env.code_of_conduct_incomplete != 'true' && env.missing_flags != '' && env.status == 'analyzed'
+      if: env.missing_flags != '' && env.status == 'analyzed'
       shell: bash
       run: |
         curl -X POST \
