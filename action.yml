@@ -96,7 +96,7 @@ runs:
         echo "Flags: $flags"
         echo "flags=$flags" >> $GITHUB_ENV
 
-        - name: Calculate missing flags
+    - name: Calculate missing flags
       id: calculate_missing_flags
       shell: bash
       run: |
