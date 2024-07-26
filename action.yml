@@ -34,6 +34,12 @@ runs:
         USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         EVENT_ACTION: 'no_code_of_conduct'
 
+    - name: Stop When No CoC
+      if: env.missing_coc == 'true'
+      shell: bash
+      run: |
+        exit 1
+
     - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
       id: check_lines
       shell: bash
