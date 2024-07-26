@@ -179,18 +179,19 @@ runs:
         flags=$(jq -c '.data.flags' data/response.json)
         echo "Flags: $flags"
         echo "flags=$flags" >> $GITHUB_ENV
+        
     - name: Send Comment and Flags to Comment-Analyzer
       uses: SOM-Research/comment-analyzer@v2
-      with:
-        github_token: ${{ inputs.GITHUB_TOKEN }}
-        server_url: ${{ inputs.SERVER }}
-        sendinblue_api_key: ${{ secrets.SENDINBLUE_API_KEY }}
-        email_from: ${{ secrets.EMAIL_FROM }}
-        email_to: ${{ secrets.EMAIL_TO }}
-        bot_user: ${{ secrets.BOT_USER }}
-        bot_token: ${{ secrets.USER_GITHUB_TOKEN }}
-        comment_json: data/comment.json
-        flags: ${{ env.flags }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        SERVER_URL: ${{ inputs.SERVER }}
+        SENDINBLUE_API_KEY: ${{ secrets.SENDINBLUE_API_KEY }}
+        EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        BOT_USER: ${{ secrets.BOT_USER }}
+        BOT_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
+        COMMENT_JSON: data/comment.json
+        FLAGS: ${{ env.flags }}
 
     - name: Calculate missing flags
       id: calculate_missing_flags
