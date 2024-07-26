@@ -24,10 +24,15 @@ runs:
           echo "coc_file=CODE_OF_CONDUCT.md" >> $GITHUB_ENV
         else
           echo "No CODE_OF_CONDUCT.md file found"
-          # Trigger new action if CODE_OF_CONDUCT.md is missing
-          echo "::set-output name=missing_coc::true"
-          exit 1
+          echo "missing_coc=true" >> $GITHUB_ENV
         fi
+
+    - name: Trigger Handle Repos without Code of Conduct Action
+      if: env.missing_coc == 'true'
+      uses: SOM-Research/code-of-conduct-initializer@v1
+      with:
+        USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        EVENT_ACTION: 'no_code_of_conduct'
 
     - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
       id: check_lines
@@ -106,13 +111,6 @@ runs:
       run: |
         version=$(jq -r '.data.contributor_covenant_version' data/response.json)
         echo "version=$version" >> $GITHUB_ENV
-
-    - name: Trigger Handle Repos without Code of Conduct Action
-      if: steps.check_coc.outputs.missing_coc == 'true'
-      uses: SOM-Research/code-of-conduct-initializer@v1
-      with:
-        USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        EVENT_ACTION: 'no_code_of_conduct'
 
     - name: Trigger Handle Contributor Covenant Version 1.4 Action
       if: env.version == '1.4'
