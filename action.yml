@@ -31,6 +31,7 @@ runs:
             https://api.github.com/repos/${{ github.repository }}/dispatches \
             -d '{"event_type":"no_code_of_conduct","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
           exit 1
+        fi
 
     - name: Check if CODE_OF_CONDUCT.md has more than 5 lines
       id: check_lines
@@ -47,6 +48,7 @@ runs:
             https://api.github.com/repos/${{ github.repository }}/dispatches \
             -d '{"event_type":"code_of_conduct_incomplete","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
           exit 1
+        fi
 
     - name: Read Code of Conduct
       id: read_coc
