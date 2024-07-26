@@ -24,12 +24,8 @@ runs:
           echo "coc_file=CODE_OF_CONDUCT.md" >> $GITHUB_ENV
         else
           echo "No CODE_OF_CONDUCT.md file found"
-          # Trigger another workflow if CODE_OF_CONDUCT.md is missing
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ github.token }}" \
-            https://api.github.com/repos/${{ github.repository }}/dispatches \
-            -d '{"event_type":"no_code_of_conduct","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+          # Trigger new action if CODE_OF_CONDUCT.md is missing
+          echo "::set-output name=missing_coc::true"
           exit 1
         fi
 
@@ -41,12 +37,8 @@ runs:
         echo "line_count=$line_count" >> $GITHUB_ENV
         if [ $line_count -le 5 ]; then
           echo "CODE_OF_CONDUCT.md has 5 lines or less"
-          # Trigger another workflow if CODE_OF_CONDUCT.md has 5 lines or less
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ github.token }}" \
-            https://api.github.com/repos/${{ github.repository }}/dispatches \
-            -d '{"event_type":"code_of_conduct_incomplete","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
+          # Trigger new action if CODE_OF_CONDUCT.md has 5 lines or less
+          echo "::set-output name=incomplete_coc::true"
           exit 1
         fi
 
@@ -115,16 +107,19 @@ runs:
         version=$(jq -r '.data.contributor_covenant_version' data/response.json)
         echo "version=$version" >> $GITHUB_ENV
 
-    - name: Trigger Handle Repos without Code of Conduct Workflow
+    - name: Trigger Handle Repos without Code of Conduct Action
+      if: steps.check_coc.outputs.missing_coc == 'true'
+      uses: SOM-Research/code-of-conduct-analyzer@v1
+      with:
+        USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        EVENT_ACTION: 'no_code_of_conduct'
+
+    - name: Trigger Handle Contributor Covenant Version 1.4 Action
       if: env.version == '1.4'
-      shell: bash
-      run: |
-        curl -X POST \
-          -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: token ${{ github.token }}" \
-          https://api.github.com/repos/${{ github.repository }}/dispatches \
-          -d '{"event_type":"handle_contributor_covenant_1_4","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}"}}'
-        exit 0
+      uses: SOM-Research/code-of-conduct-analyzer@v1
+      with:
+        USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        EVENT_ACTION: 'handle_contributor_covenant_1_4'
 
     - name: Trigger Issue Creation Workflow
       if: env.missing_flags != '' && env.status == 'analyzed'
