@@ -10,6 +10,19 @@ inputs:
   bot_user:
     description: 'GitHub Bot User'
     required: true
+  sendinblue_api_key:
+    description: 'Sendinblue API key'
+    required: true
+  email_from:
+    description: 'Sender email address'
+    required: true
+  email_to:
+    description: 'Recipient email address'
+    required: true
+  bot_token:
+    description: 'Bot GitHub token'
+    required: true
+
 runs:
   using: 'composite'
   steps:
@@ -97,12 +110,6 @@ runs:
                 '{type: $type, data: {comment_id: $comment_id, user: $user, user_id: $user_id, user_avatar_url: $user_avatar_url, user_html_url: $user_html_url, user_type: $user_type, event_type: $event_type, event_number: $event_number, event_title: $event_title, event_body: $event_body, comment_body: $comment_body, created_at: $created_at, updated_at: $updated_at, event_url: $event_url, comment_url: $comment_url, repository_name: $repository_name, repository_full_name: $repository_full_name, repository_html_url: $repository_html_url}}' > data/comment.json
         fi
         cat data/comment.json
-
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        persist-credentials: false
-        fetch-depth: 0
     
     - name: Check if CODE_OF_CONDUCT.md exists
       id: check_coc
@@ -183,6 +190,19 @@ runs:
         flags=$(jq -c '.data.flags' data/response.json)
         echo "Flags: $flags"
         echo "flags=$flags" >> $GITHUB_ENV
+        
+    - name: Send Comment and Flags to Comment-Analyzer
+      uses: SOM-Research/comment-analyzer@v2
+      with:
+        github_token: ${{ inputs.GITHUB_TOKEN }}
+        server_url: ${{ inputs.SERVER }}
+        sendinblue_api_key: ${{ secrets.SENDINBLUE_API_KEY }}
+        email_from: ${{ secrets.EMAIL_FROM }}
+        email_to: ${{ secrets.EMAIL_TO }}
+        bot_user: ${{ secrets.BOT_USER }}
+        bot_token: ${{ secrets.USER_GITHUB_TOKEN }}
+        comment_json: data/comment.json
+        flags: ${{ env.flags }}
 
     - name: Calculate missing flags
       id: calculate_missing_flags
@@ -198,6 +218,7 @@ runs:
         done
         missing_flags_str=$(IFS=','; echo "${missing_flags[*]}")
         echo "missing_flags=$missing_flags_str" >> $GITHUB_ENV
+      
 
     - name: Check Contributor Covenant Version
       id: check_version
