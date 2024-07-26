@@ -179,18 +179,16 @@ runs:
         flags=$(jq -c '.data.flags' data/response.json)
         echo "Flags: $flags"
         echo "flags=$flags" >> $GITHUB_ENV
-
     - name: Send Comment and Flags to Comment-Analyzer
-      uses: SOM-Research/comment-analyzer@v1.2
+      uses: SOM-Research/comment-analyzer@v2
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        server_url: ${{ secrets.SERVER }}
+        github_token: ${{ inputs.GITHUB_TOKEN }}
+        server_url: ${{ inputs.SERVER }}
         sendinblue_api_key: ${{ secrets.SENDINBLUE_API_KEY }}
         email_from: ${{ secrets.EMAIL_FROM }}
         email_to: ${{ secrets.EMAIL_TO }}
         bot_user: ${{ secrets.BOT_USER }}
         bot_token: ${{ secrets.USER_GITHUB_TOKEN }}
-      env:
         comment_json: data/comment.json
         flags: ${{ env.flags }}
 
