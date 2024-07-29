@@ -257,9 +257,9 @@ runs:
     - name: Trigger Issue Creation Workflow
       if: env.missing_flags != '' && env.status == 'analyzed'
       shell: bash
-      run: |
-        curl -X POST \
-          -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: token ${{ github.token }}" \
-          https://api.github.com/repos/${{ github.repository }}/dispatches \
-          -d '{"event_type":"create_issue_for_missing_guidelines","client_payload":{"repo_name":"${{ github.repository }}","repo_url":"https://github.com/${{ github.repository }}","missing_flags":"${{ env.missing_flags }}"}}'
+      uses: SOM-Research/issue-manager@v1
+      with:
+        bot_token: ${{ inputs.bot_token }}
+        repo_name: ${{ env.repo_name }}
+        event_action: 'code_of_conduct_incomplete'
+        missing_flags: ${{ env.missing_flags }}
