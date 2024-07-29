@@ -144,7 +144,6 @@ runs:
           if [ $line_count -le 5 ]; then
             echo "CODE_OF_CONDUCT.md has 5 lines or less"
             echo "repo_name=${{ github.repository }}" >> $GITHUB_ENV
-            echo "repo_url=${{ github.server_url }}/repos/${{ github.repository }}" >> $GITHUB_ENV
           fi
 
       - name: Debug environment variables
@@ -152,7 +151,6 @@ runs:
         run: |
           echo "line_count=$line_count"
           echo "repo_name=$repo_name"
-          echo "repo_url=$repo_url"
 
       - name: Activate Issue Manager For Url
         if: env.line_count <= 5
@@ -160,7 +158,6 @@ runs:
         with:
           bot_token: ${{ secrets.GITHUB_TOKEN }}
           repo_name: ${{ env.repo_name }}
-          repo_url: ${{ env.repo_url }}
           event_action: 'code_of_conduct_incomplete'
 
     - name: Stop When Url
