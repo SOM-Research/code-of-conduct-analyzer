@@ -143,10 +143,24 @@ runs:
         echo "line_count=$line_count" >> $GITHUB_ENV
         if [ $line_count -le 5 ]; then
           echo "CODE_OF_CONDUCT.md has 5 lines or less"
-          # Trigger new action if CODE_OF_CONDUCT.md has 5 lines or less
-          echo "::set-output name=incomplete_coc::true"
-          exit 1
+          echo "repo_name=${{ github.event.client_payload.repo_name }}" >> $GITHUB_ENV
+          echo "repo_url=${{ github.event.client_payload.repo_url }}" >> $GITHUB_ENV
         fi
+        
+    - name: Activate Issue Manager For Url
+      if: env.line_count <= 5
+      uses: SOM-Research/issue-manager@v1
+      with:
+        bot_token: ${{ inputs.bot_token }}
+        repo_name: ${{ env.repo_name }}
+        repo_url: ${{ env.repo_url }}
+        event_action: 'code_of_conduct_incomplete'
+
+    - name: Stop When Url
+      if: env.line_count <= 5
+      shell: bash
+      run: |
+        exit 1
 
     - name: Read Code of Conduct
       id: read_coc
