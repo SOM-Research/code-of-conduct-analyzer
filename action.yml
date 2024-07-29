@@ -256,7 +256,6 @@ runs:
 
     - name: Trigger Issue Creation Workflow
       if: env.missing_flags != '' && env.status == 'analyzed'
-      shell: bash
       uses: SOM-Research/issue-manager@v1
       with:
         bot_token: ${{ inputs.bot_token }}
