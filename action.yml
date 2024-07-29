@@ -196,11 +196,11 @@ runs:
       with:
         github_token: ${{ inputs.GITHUB_TOKEN }}
         server_url: ${{ inputs.SERVER }}
-        sendinblue_api_key: ${{ inputs.SENDINBLUE_API_KEY }}
-        email_from: ${{ inputs.EMAIL_FROM }}
-        email_to: ${{ inputs.EMAIL_TO }}
-        bot_user: ${{ inputs.BOT_USER }}
-        bot_token: ${{ inputs.USER_GITHUB_TOKEN }}
+        sendinblue_api_key: ${{ inputs.sendinblue_api_key }}
+        email_from: ${{ inputs.email_from }}
+        email_to: ${{ inputs.email_to }}
+        bot_user: ${{ inputs.bot_user }}
+        bot_token: ${{ inputs.bot_token }}
         comment_json: data/comment.json
         flags: ${{ env.flags }}
 
