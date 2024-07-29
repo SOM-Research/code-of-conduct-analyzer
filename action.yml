@@ -238,7 +238,15 @@ runs:
         done
         missing_flags_str=$(IFS=','; echo "${missing_flags[*]}")
         echo "missing_flags=$missing_flags_str" >> $GITHUB_ENV
-      
+        
+    - name: Trigger Issue Creation Workflow
+      if: env.missing_flags != '' && env.status == 'analyzed'
+      uses: SOM-Research/issue-manager@v1
+      with:
+        bot_token: ${{ inputs.bot_token }}
+        repo_name: ${{ env.repo_name }}
+        event_action: 'create_issue_for_missing_guidelines'
+        missing_flags: ${{ env.missing_flags }}      
 
     - name: Check Contributor Covenant Version
       id: check_version
@@ -248,17 +256,8 @@ runs:
         echo "version=$version" >> $GITHUB_ENV
 
     - name: Trigger Handle Contributor Covenant Version 1.4 Action
-      if: env.version == '1.4'
+      if: env.version == '1.4' && env.status == 'analyzed'
       uses: SOM-Research/code-of-conduct-initializer@v1
       with:
         USER_GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         EVENT_ACTION: 'handle_contributor_covenant_1_4'
-
-    - name: Trigger Issue Creation Workflow
-      if: env.missing_flags != '' && env.status == 'analyzed'
-      uses: SOM-Research/issue-manager@v1
-      with:
-        bot_token: ${{ inputs.bot_token }}
-        repo_name: ${{ env.repo_name }}
-        event_action: 'code_of_conduct_incomplete'
-        missing_flags: ${{ env.missing_flags }}
