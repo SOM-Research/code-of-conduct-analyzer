@@ -1,40 +1,52 @@
-# template
+# Code of Conduct Analyzer GitHub Action
 
-This is a template for future repositories born in the SOM GitHub organization.
-It offers a collection of files and repository configuration for kick-starting a new project under the SOM GitHub organization.
+This GitHub Action checks for the presence of `CODE_OF_CONDUCT.md` in a repository, processes its content, and takes appropriate actions based on the analysis.
 
-This repository does not have activated the use of issues, projects o wikis. Only Pull Requests are allowed.
+## Features
 
-> If you have **any** question, contact [Javier Cánovas](https://github.com/jlcanovas) via the SOM Slack app.
+- Checks for the existence of `CODE_OF_CONDUCT.md` in the repository.
+- Sends the content of `CODE_OF_CONDUCT.md` to an external server for analysis.
+- Takes actions based on the analysis results, such as creating issues or sending notifications.
+- Delegates further processing to other actions.
 
-## Steps to customize this repo for your project
+## Inputs
 
-1. Create a new repository in the SOM GitHub organization using this template. You have to set the `Repository template` field to `SOM-Research/template`.
+- `GITHUB_TOKEN` **(required)**: GitHub token for authentication.
+- `SERVER` **(required)**: Server URL to send the code of conduct for analysis.
+- `bot_user` **(required)**: GitHub bot user for performing automated actions.
+- `sendinblue_api_key` **(required)**: Sendinblue API key for sending email notifications.
+- `email_from` **(required)**: Sender email address for notifications.
+- `email_to` **(required)**: Recipient email address for notifications.
+- `bot_token` **(required)**: GitHub token of the bot for performing actions.
 
-    ![Repositoy Template](images/repositoryTemplate.png)
+### How It Works
+1. **Checkout Repository**: The action checks out the repository to get the latest code and context.
+2. **Check for `CODE_OF_CONDUCT.md`**: Verifies if the file exists in the repository.
+3. **Analyze the Code of Conduct**: Sends the content of the `CODE_OF_CONDUCT.md` file to an external server for analysis.
+4. **Handle Analysis Results**: Based on the analysis results, takes appropriate actions such as creating issues or sending notifications.
+5. **Send to Comment Analyzer**: Forwards the analysis results and the comment details to the Comment Analyzer action for further processing.
 
-2. Edit the project description. You can do it in the `About` tab of the repository (click on the gear icon). Try to create a descriptive entry for the project, and include at least three tags. If the project has a website, indicate also the URL.
+## Example Scenario
+- **Code of Conduct Present and Valid**: The action proceeds with further analysis and sends the results for additional processing.
+- **Code of Conduct Missing or Invalid**: The action creates an issue or takes other appropriate actions based on the analysis results.
 
-    ![Project Description](images/about.png)
+## Permissions
+This action requires the following permissions:
 
-3. In the preovious menu, decide also whether your repository page should include `Releases`, `Packages` or `Environments` tabs. In case of doubt, remove them
+- `contents: write`
+- `issues: write`
+- `pull-requests: write`
+- `discussions: write`
+- `actions: read`
 
-4. Review the contributing guidelines in `CONTIBUTING.md`. Please, read carefully the provided template and adapt to your repository.
+Ensure these permissions are set in your workflow.
 
-5. Review the code of conduct in `CODE_OF_CONDUCT.md`. Please, read carefully the provided template and adapt to your repository.
+## License
+This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
 
-6. Review the governance model in `GOVERNANCE.md`. Please, read carefully the provided template and adapt to your repository.
+The CC BY-SA license allows users to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. The license allows for commercial use. If you remix, adapt, or build upon the material, you must license the modified material under identical terms.
 
-7. Check that the proposed license matches with your project. The template includes the CC-BY-SA license, but you can change it to any other license. You can find a list of licenses in [Choose a License](https://choosealicense.com/).
+[Creative Commons License](https://creativecommons.org/licenses/by-sa/4.0/)
 
-8. Decide whether your project will use issues, projects, and wikis. You can de/activate them in the `Settings` tab of the repository.
-
-9. Review the templates proposed for issues and pull requests. You can find them in the `.github` folder. Remove the folder if you do not plan to use them. 
-
-    9.1. Issue templates are located in `.github/ISSUE_TEMPLATE`. You can find a template for proposals and questions, but you can modify or create new ones. You can find more information in [About issue and pull request templates](https://help.github.com/en/github/building-a-strong-community/about-issue-and-pull-request-templates). 
-
-    9.2. Pull request template is located in `.github`. You can find more information in [About issue and pull request templates](https://help.github.com/en/github/building-a-strong-community/about-issue-and-pull-request-templates).
-
-10. If your work is related to a paper, and you want to facilitate its citation, review the `CITATION.cff` file. The provided template will help to fill the gaps, but if you need more help, you can find more information in [Citation File Format](https://citation-file-format.github.io/). Otherwise, just remove the file.
-
-11. Modify the `README.md` file. Once you have done the previous steps, write your the README file for your project. 
+## Author
+Created by CobosDS. For any issues or contributions, please open an issue or submit a pull request on the [GitHub repository](https://github.com/SOM-Research/code-of-conduct-analyzer).
