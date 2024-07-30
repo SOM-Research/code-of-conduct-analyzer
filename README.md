@@ -1,4 +1,4 @@
-# Send Code of Conduct GitHub Action
+# Code of Conduct Analyzer GitHub Action
 
 This GitHub Action checks for the presence of `CODE_OF_CONDUCT.md` in a repository, processes its content, and takes appropriate actions based on the analysis.
 
