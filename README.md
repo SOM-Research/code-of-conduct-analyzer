@@ -60,5 +60,3 @@ The CC BY-SA license allows users to distribute, remix, adapt, and build upon th
 
 [Creative Commons License](https://creativecommons.org/licenses/by-sa/4.0/)
 
-## Author
-Created by CobosDS. For any issues or contributions, please open an issue or submit a pull request on the [GitHub repository](https://github.com/SOM-Research/code-of-conduct-analyzer).
