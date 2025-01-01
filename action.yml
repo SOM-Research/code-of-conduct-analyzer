@@ -1,4 +1,4 @@
-name: 'Send Code of Conduct'
+name: 'Code of Conduct Analyzer'
 description: 'Checks for CODE_OF_CONDUCT.md and processes it'
 inputs:
   GITHUB_TOKEN:
